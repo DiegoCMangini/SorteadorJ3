@@ -1,0 +1,101 @@
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: url('assets/fundo.png') no-repeat center center fixed;
+  background-size: cover;
+  color: #333;
+  text-align: center;
+  padding: 40px 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Cabeçalho */
+header {
+  margin-bottom: 30px;
+}
+
+.logo {
+  width: 100px;
+  margin-bottom: 10px;
+}
+
+h1 {
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Área principal */
+main {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 30px;
+  border-radius: 15px;
+  max-width: 450px;
+  margin: 0 auto;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Inputs */
+input {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid #e70e0e;
+  border-radius: 8px;
+  font-size: 16px;
+  margin-bottom: 15px;
+  transition: border-color 0.3s;
+}
+
+input:focus {
+  border-color: #000000;
+  outline: none;
+}
+
+/* Botões */
+button {
+  background-color: #e70e0e;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 25px;
+  cursor: pointer;
+  margin: 10px 5px;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #000000;
+}
+
+/* Resultados */
+#usuarios, #contagem, #resultado {
+  margin-top: 20px;
+  font-size: 16px;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #ecf0f1;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+}
+
+/* Footer */
+footer {
+  margin-top: 40px;
+  font-size: 14px;
+  color: #777;
+}
+
+#usuarios {
+  max-height: 300px;
+  overflow-y: auto;
+}

@@ -3,137 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <title>Sorteador YouTube Live</title>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-    input, button { font-size: 16px; padding: 10px; margin: 10px; width: 300px; }
-    #usuarios { margin-top: 20px; }
-    #contagem { font-size: 32px; color: green; margin-top: 20px; }
-    #resultado { font-size: 28px; margin-top: 20px; font-weight: bold; color: blue; }
-    #historico { margin-top: 20px; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; text-align: left; width: 350px; margin-left: auto; margin-right: auto; }
-  </style>
+  <link rel="icon" href="assets/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <h1>🎯 Sorteador de Comentários do YouTube Live</h1>
+  <header>
+    <img src="assets/logo.png" alt="Logo" class="logo" />
+    <h1>Show Do Cinquentão</h1>
+  </header>
 
-  <input id="liveUrl" placeholder="Cole aqui o link da live" />
-  <button onclick="buscarComentarios()">Buscar Comentários</button>
+  <main>
+    <input id="liveUrl" placeholder="Cole aqui o link da live" />
+    <button onclick="buscarComentarios()">Buscar Comentários</button>
 
-  <div id="usuarios"></div>
-  
-  <button id="btnSortear" style="display:none;" onclick="fazerSorteio()">Iniciar Sorteio</button>
-  <button onclick="mostrarHistorico()">Mostrar Histórico</button>
+    <div id="usuarios"></div>
 
-  <div id="contagem"></div>
-  <div id="resultado"></div>
-  <div id="historico"></div>
+    <button id="btnSortear" style="display:none;" onclick="fazerSorteio()">Iniciar Sorteio</button>
+    
+    <a href="historico.html">
+      <button>Ver Histórico Completo</button>
+    </a>
 
-  <script>
-    let usuarios = [];
+    <div id="contagem"></div>
+    <div id="resultado"></div>
+  </main>
 
-    async function buscarComentarios() {
-      const url = document.getElementById("liveUrl").value;
-      let videoId;
-      try {
-        videoId = new URL(url).searchParams.get("v");
-      } catch {
-        alert("Link inválido. Use a URL completa da live.");
-        return;
-      }
+  <footer>
+    <p>Feito por Diego Mangini © 2025</p>
+  </footer>
 
-      if (!videoId) {
-        alert("Link inválido. Use a URL completa da live.");
-        return;
-      }
-
-      document.getElementById("usuarios").innerHTML = "Carregando usuários...";
-      document.getElementById("resultado").innerText = "";
-      document.getElementById("btnSortear").style.display = "none";
-      document.getElementById("contagem").innerText = "";
-      document.getElementById("historico").innerHTML = "";
-
-      try {
-        const res = await fetch(`/comentarios?videoId=${videoId}`);
-        const data = await res.json();
-        usuarios = data.usuarios;
-
-        if (usuarios.length === 0) {
-          document.getElementById("usuarios").innerHTML = "Nenhum usuário encontrado.";
-          return;
-        }
-
-        document.getElementById("usuarios").innerHTML =
-          `<p>${usuarios.length} usuários encontrados:</p><p>${usuarios.join(", ")}</p>`;
-        document.getElementById("btnSortear").style.display = "inline-block";
-      } catch {
-        document.getElementById("usuarios").innerHTML = "Erro ao buscar usuários.";
-      }
-    }
-
-    async function fazerSorteio() {
-      let segundos = 10;
-      document.getElementById("contagem").innerText = `⏳ ${segundos} segundos...`;
-      document.getElementById("resultado").innerText = "";
-      document.getElementById("btnSortear").disabled = true;
-
-      const url = document.getElementById("liveUrl").value;
-      const videoId = new URL(url).searchParams.get("v");
-
-      const intervalo = setInterval(() => {
-        segundos--;
-        if (segundos <= 0) {
-          clearInterval(intervalo);
-          sortearUsuario(videoId);
-        } else {
-          document.getElementById("contagem").innerText = `⏳ ${segundos} segundos...`;
-        }
-      }, 1000);
-    }
-
-    async function sortearUsuario(videoId) {
-      try {
-        const res = await fetch('/sorteio', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ videoId })
-        });
-        const data = await res.json();
-
-        document.getElementById("contagem").innerText = "";
-        if (data.error) {
-          alert(data.error);
-          document.getElementById("btnSortear").disabled = false;
-          return;
-        }
-        document.getElementById("resultado").innerText = `🎉 O vencedor é: ${data.vencedor}`;
-      } catch {
-        alert("Erro no sorteio.");
-      } finally {
-        document.getElementById("btnSortear").disabled = false;
-      }
-    }
-
-    async function mostrarHistorico() {
-      try {
-        const res = await fetch('/historico');
-        const data = await res.json();
-        const historico = data.historico;
-
-        if (historico.length === 0) {
-          document.getElementById("historico").innerText = "Nenhum sorteio realizado ainda.";
-          return;
-        }
-
-        let html = "<h3>Histórico de Sorteios</h3><ul>";
-        historico.forEach(item => {
-          html += `<li>${item.data} - ${item.nome}</li>`;
-        });
-        html += "</ul>";
-
-        document.getElementById("historico").innerHTML = html;
-      } catch {
-        document.getElementById("historico").innerText = "Erro ao carregar histórico.";
-      }
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>

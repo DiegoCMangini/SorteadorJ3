@@ -1,80 +1,94 @@
 require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
-const bodyParser = require('body-parser');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.YOUTUBE_API_KEY;
 
 app.use(express.static('public'));
-app.use(bodyParser.json());
+app.use(express.json());
 
-const historicoVencedores = [];
+let historico = [];
 
-app.get('/comentarios', async (req, res) => {
-  const videoId = req.query.videoId;
-  if (!videoId) return res.status(400).json({ error: 'videoId ausente' });
-
-  try {
-    const liveChatId = await obterLiveChatId(videoId);
-    const usuarios = await buscarUsuariosUnicos(liveChatId);
-    res.json({ usuarios });
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.status(500).json({ error: 'Erro ao buscar comentários' });
-  }
+// Rota principal
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.post('/sorteio', async (req, res) => {
-  const { videoId } = req.body;
-  if (!videoId) return res.status(400).json({ error: 'videoId ausente' });
+// Página de histórico
+app.get('/historico.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'historico.html'));
+});
+
+// API para buscar comentários ao vivo
+app.post('/buscar', async (req, res) => {
+  const { liveUrl } = req.body;
 
   try {
-    const liveChatId = await obterLiveChatId(videoId);
-    const usuarios = await buscarUsuariosUnicos(liveChatId);
+    const videoId = extractVideoId(liveUrl);
 
-    if (usuarios.length === 0) {
-      return res.status(400).json({ error: 'Nenhum usuário encontrado para sortear.' });
-    }
-
-    const vencedor = usuarios[Math.floor(Math.random() * usuarios.length)];
-
-    historicoVencedores.push({
-      nome: vencedor,
-      data: new Date().toLocaleString()
+    // Busca o liveChatId
+    const videoRes = await axios.get(`https://www.googleapis.com/youtube/v3/videos`, {
+      params: {
+        part: 'liveStreamingDetails',
+        id: videoId,
+        key: API_KEY
+      }
     });
 
-    res.json({ vencedor });
+    const liveChatId = videoRes.data.items[0]?.liveStreamingDetails?.activeLiveChatId;
+    if (!liveChatId) return res.status(404).json({ error: 'Live não encontrada ou sem chat ativo.' });
+
+    // Pega mensagens do chat ao vivo
+    const chatRes = await axios.get(`https://www.googleapis.com/youtube/v3/liveChat/messages`, {
+      params: {
+        liveChatId,
+        part: 'snippet,authorDetails',
+        maxResults: 200,
+        key: API_KEY
+      }
+    });
+
+    const usuarios = chatRes.data.items.map(item => item.authorDetails.displayName);
+    const unicos = [...new Set(usuarios)];
+
+    res.json({ usuarios: unicos });
   } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.status(500).json({ error: 'Erro ao realizar o sorteio' });
+    console.error('Erro ao buscar comentários:', err);
+    res.status(500).json({ error: 'Erro ao buscar comentários.' });
   }
 });
 
+// API para fazer o sorteio
+app.post('/sortear', (req, res) => {
+  const { usuarios } = req.body;
+
+  if (!usuarios || usuarios.length === 0) {
+    return res.status(400).json({ error: 'Nenhum usuário disponível para sortear.' });
+  }
+
+  const sorteado = usuarios[Math.floor(Math.random() * usuarios.length)];
+  const data = new Date().toLocaleString('pt-BR');
+
+  historico.push({ nome: sorteado, data });
+  res.json({ vencedor: sorteado });
+});
+
+// API para consultar histórico
 app.get('/historico', (req, res) => {
-  res.json({ historico: historicoVencedores });
+  res.json({ historico });
 });
 
-async function obterLiveChatId(videoId) {
-  const url = `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${videoId}&key=${API_KEY}`;
-  const res = await axios.get(url);
-  if (!res.data.items || res.data.items.length === 0) {
-    throw new Error('Vídeo não encontrado ou não está ao vivo.');
-  }
-  return res.data.items[0].liveStreamingDetails.activeLiveChatId;
+// Função auxiliar: extrair ID da URL
+function extractVideoId(url) {
+  const regex = /(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
 }
 
-async function buscarUsuariosUnicos(liveChatId) {
-  const url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&key=${API_KEY}`;
-  const res = await axios.get(url);
-  const nomes = new Set();
-
-  res.data.items.forEach(item => {
-    nomes.add(item.authorDetails.displayName);
-  });
-
-  return Array.from(nomes);
-}
-
-app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));
+// Inicia o servidor
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
+});
