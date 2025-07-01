@@ -66,41 +66,23 @@ async function buscarComentarios() {
   }
 }
 
-async function fazerSorteio() {
+function fazerSorteio() {
   if (usuarios.length === 0) {
     alert('Nenhum usuário disponível para sortear.');
     return;
   }
 
-  document.getElementById('contagem').textContent = 'Sorteando em 10 segundos...';
-
-  let contagem = 10;
-  const interval = setInterval(() => {
-    contagem--;
-    document.getElementById('contagem').textContent = `Sorteando em ${contagem} segundos...`;
-    if (contagem === 0) {
-      clearInterval(interval);
-      sortearUsuario();
-    }
-  }, 1000);
+  sessionStorage.setItem('usuarios', JSON.stringify(usuarios));
+  window.location.href = '/contagem.html';
 }
 
-async function sortearUsuario() {
-  try {
-    const res = await fetch('/sortear', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ usuarios })
-    });
 
-    const data = await res.json();
-
-    document.getElementById('contagem').textContent = '';
-    document.getElementById('resultado').innerHTML = `<strong>🎉 Vencedor: ${data.vencedor} 🎉</strong>`;
-  } catch (error) {
-    console.error('Erro no sorteio:', error);
-    alert('Erro ao sortear.');
+function fazerSorteio() {
+  if (usuarios.length === 0) {
+    alert('Nenhum usuário disponível para sortear.');
+    return;
   }
+
+  sessionStorage.setItem('usuarios', JSON.stringify(usuarios));
+  window.location.href = '/contagem.html';
 }
