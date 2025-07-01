@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
-
+const listaNegra = ['usuário1', 'usuário2', 'bot123']; 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.YOUTUBE_API_KEY;
@@ -61,7 +61,23 @@ app.post('/buscar', async (req, res) => {
   }
 });
 
-// API para fazer o sorteio
+// Retorna a lista negra atual
+app.get('/lista-negra', (req, res) => {
+  res.json({ listaNegra });
+});
+
+// Atualiza a lista negra (recebe array de strings)
+app.post('/lista-negra', (req, res) => {
+  const { novaLista } = req.body;
+  if (!Array.isArray(novaLista)) {
+    return res.status(400).json({ error: 'Envie um array de nomes.' });
+  }
+  listaNegra = novaLista;
+  res.json({ mensagem: 'Lista negra atualizada com sucesso!', listaNegra });
+});
+
+
+//Sorteio
 app.post('/sortear', (req, res) => {
   const { usuarios } = req.body;
 
@@ -69,12 +85,22 @@ app.post('/sortear', (req, res) => {
     return res.status(400).json({ error: 'Nenhum usuário disponível para sortear.' });
   }
 
-  const sorteado = usuarios[Math.floor(Math.random() * usuarios.length)];
+  const usuariosFiltrados = usuarios.filter(user =>
+    !listaNegra.some(nomeBloqueado => nomeBloqueado.toLowerCase() === user.nome.toLowerCase())
+  );
+
+  if (usuariosFiltrados.length === 0) {
+    return res.status(400).json({ error: 'Nenhum usuário disponível para sortear após filtro da lista negra.' });
+  }
+
+  const sorteado = usuariosFiltrados[Math.floor(Math.random() * usuariosFiltrados.length)];
   const data = new Date().toLocaleString('pt-BR');
 
-  historico.push({ nome: sorteado, data });
+  historico.push({ nome: sorteado.nome, data, avatar: sorteado.avatar });
+
   res.json({ vencedor: sorteado });
 });
+
 
 // API para consultar histórico
 app.get('/historico', (req, res) => {
@@ -88,7 +114,8 @@ function extractVideoId(url) {
   return match ? match[1] : null;
 }
 
-// Inicia o servidor
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+

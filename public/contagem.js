@@ -31,7 +31,7 @@ if (!usuarios || usuarios.length === 0) {
       const data = await res.json();
 
       contagemEl.textContent = '';
-      resultadoEl.innerHTML = `<strong>🎉 Vencedor: ${data.vencedor} 🎉</strong>`;
+      resultadoEl.innerHTML = `<strong> Vencedor: ${data.vencedor} </strong>`;
     } catch (error) {
       console.error('Erro no sorteio:', error);
       contagemEl.textContent = 'Erro ao sortear.';

@@ -4,22 +4,69 @@
   <meta charset="UTF-8" />
   <title>Histórico de Sorteios</title>
   <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f7f7f7;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #ffffff;
+    }
+
+    table {
+      width: 80%;
+      margin: 0 auto;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    th {
+      background-color: #ff0000b7;
+      color: white;
+    }
+
+    button {
+      margin-top: 30px;
+      padding: 10px 20px;
+      background-color:#e70e0e;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #000000;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <img src="assets/logo.png" alt="Logo Diego" class="logo" />
-    <h1>Histórico de Sorteios</h1>
-    <a href="index.html">← Voltar para o sorteio</a>
+    <h1>Últimos Vencedores</h1>
   </header>
 
   <main>
-    <div id="historico">Carregando histórico...</div>
+    <div id="listaHistorico">
+    </div>
+
+    <button onclick="voltar()">Voltar</button>
   </main>
 
-  <footer>
-    <p>Feito por Diego Mangini © 2025</p>
-  </footer>
-
   <script src="historico.js"></script>
+  <script>
+    function voltar() {
+      window.location.href = '/';
+    }
+  </script>
 </body>
 </html>
