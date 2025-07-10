@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Editar Blacklist</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+  <style>
+    /* Reset básico */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: url('assets/fundo.png') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+      text-align: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    h2 {
+      color: #fff;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #e70e0e;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+      margin-bottom: 10px;
+    }
+
+    input:focus {
+      border-color: #000000;
+      outline: none;
+    }
+
+    button {
+      background-color: #e70e0e;
+      color: white;
+      font-weight: 600;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 25px;
+      cursor: pointer;
+      margin: 10px 5px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #000000;
+    }
+
+    ul {
+      max-width: 450px;
+      margin: 0 auto 20px auto;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 15px;
+      padding: 15px 20px;
+      box-shadow: 0 8px 20px rgba(255, 0, 0, 0.15);
+      max-height: 300px;
+      overflow-y: auto;
+      text-align: left;
+      color: #000;
+      list-style-type: none;
+    }
+
+    ul li {
+      padding: 8px 5px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    /* Botão voltar centralizado e com estilo do projeto */
+    .btn-voltar {
+      display: block;
+      width: 200px;
+      margin: 0 auto 20px auto;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>Gerenciar Lista Negra</h2>
+
+  <input id="nome" placeholder="Digite um nome..." />
+  <button onclick="adicionar()">Adicionar</button>
+  <button onclick="remover()">Remover</button>
+
+  <ul id="lista-negra"></ul>
+
+  <button class="btn-voltar" onclick="voltar()">← Voltar</button>
+
+  <script>
+    async function carregar() {
+      try {
+        const res = await fetch('/api/blacklist');
+        if (!res.ok) throw new Error('Erro na resposta da API');
+        const lista = await res.json();
+
+        const ul = document.getElementById('lista-negra');
+        ul.innerHTML = '';
+
+        if (lista.length === 0) {
+          ul.innerHTML = '<li><em>A lista está vazia</em></li>';
+          return;
+        }
+
+        lista.forEach(nome => {
+          const li = document.createElement('li');
+          li.textContent = nome;
+          ul.appendChild(li);
+        });
+      } catch (e) {
+        alert('Erro ao carregar a lista negra: ' + e.message);
+      }
+    }
+
+    async function adicionar() {
+      const nome = document.getElementById('nome').value.trim();
+      if (!nome) return alert('Digite um nome');
+      await fetch('/api/blacklist/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome })
+      });
+      document.getElementById('nome').value = '';
+      carregar();
+    }
+
+    async function remover() {
+      const nome = document.getElementById('nome').value.trim();
+      if (!nome) return alert('Digite um nome');
+      await fetch('/api/blacklist/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome })
+      });
+      document.getElementById('nome').value = '';
+      carregar();
+    }
+
+    function voltar() {
+      window.location.href = 'index.html';
+    }
+
+    carregar();
+  </script>
+</body>
+</html>
+

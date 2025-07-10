@@ -73,6 +73,25 @@ button {
   transition: background-color 0.3s;
 }
 
+.botao-blacklist {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #000000;
+      color: white;
+      font-size: 24px;
+      padding: 12px 16px;
+      border-radius: 50%;
+      text-decoration: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      transition: background 0.3s ease;
+      z-index: 999;
+    }
+
+    .botao-blacklist:hover {
+      background-color: #388e3c;
+    }
+
 button:hover {
   background-color: #000000;
 }

@@ -2,15 +2,61 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
-const listaNegra = ['usuário1', 'usuário2', 'bot123']; 
+const fs = require('fs');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.YOUTUBE_API_KEY;
+
+const BLACKLIST_PATH = path.join(__dirname, 'blacklist.json');
 
 app.use(express.static('public'));
 app.use(express.json());
 
 let historico = [];
+
+// Funções para manipular blacklist
+function carregarBlacklist() {
+  try {
+    const data = fs.readFileSync(BLACKLIST_PATH, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+}
+
+function salvarBlacklist(lista) {
+  fs.writeFileSync(BLACKLIST_PATH, JSON.stringify(lista, null, 2));
+}
+
+// Rotas Blacklist
+app.get('/api/blacklist', (req, res) => {
+  const lista = carregarBlacklist();
+  res.json(lista);
+});
+
+app.post('/api/blacklist/add', (req, res) => {
+  const { nome } = req.body;
+  if (!nome) return res.status(400).json({ error: 'Nome é obrigatório' });
+
+  const lista = carregarBlacklist();
+  if (!lista.includes(nome)) {
+    lista.push(nome);
+    salvarBlacklist(lista);
+  }
+  res.json({ mensagem: 'Nome adicionado', lista });
+});
+
+app.post('/api/blacklist/remove', (req, res) => {
+  const { nome } = req.body;
+  if (!nome) return res.status(400).json({ error: 'Nome é obrigatório' });
+
+  let lista = carregarBlacklist();
+  lista = lista.filter(n => n !== nome);
+  salvarBlacklist(lista);
+
+  res.json({ mensagem: 'Nome removido', lista });
+});
 
 // Rota principal
 app.get('/', (req, res) => {
@@ -29,7 +75,6 @@ app.post('/buscar', async (req, res) => {
   try {
     const videoId = extractVideoId(liveUrl);
 
-    // Busca o liveChatId
     const videoRes = await axios.get(`https://www.googleapis.com/youtube/v3/videos`, {
       params: {
         part: 'liveStreamingDetails',
@@ -41,7 +86,6 @@ app.post('/buscar', async (req, res) => {
     const liveChatId = videoRes.data.items[0]?.liveStreamingDetails?.activeLiveChatId;
     if (!liveChatId) return res.status(404).json({ error: 'Live não encontrada ou sem chat ativo.' });
 
-    // Pega mensagens do chat ao vivo
     const chatRes = await axios.get(`https://www.googleapis.com/youtube/v3/liveChat/messages`, {
       params: {
         liveChatId,
@@ -61,23 +105,7 @@ app.post('/buscar', async (req, res) => {
   }
 });
 
-// Retorna a lista negra atual
-app.get('/lista-negra', (req, res) => {
-  res.json({ listaNegra });
-});
-
-// Atualiza a lista negra (recebe array de strings)
-app.post('/lista-negra', (req, res) => {
-  const { novaLista } = req.body;
-  if (!Array.isArray(novaLista)) {
-    return res.status(400).json({ error: 'Envie um array de nomes.' });
-  }
-  listaNegra = novaLista;
-  res.json({ mensagem: 'Lista negra atualizada com sucesso!', listaNegra });
-});
-
-
-//Sorteio
+// Sorteio
 app.post('/sortear', (req, res) => {
   const { usuarios } = req.body;
 
@@ -85,8 +113,10 @@ app.post('/sortear', (req, res) => {
     return res.status(400).json({ error: 'Nenhum usuário disponível para sortear.' });
   }
 
+  const listaNegra = carregarBlacklist();
+
   const usuariosFiltrados = usuarios.filter(user =>
-    !listaNegra.some(nomeBloqueado => nomeBloqueado.toLowerCase() === user.nome.toLowerCase())
+    !listaNegra.some(nomeBloqueado => nomeBloqueado.toLowerCase() === user.toLowerCase())
   );
 
   if (usuariosFiltrados.length === 0) {
@@ -96,11 +126,10 @@ app.post('/sortear', (req, res) => {
   const sorteado = usuariosFiltrados[Math.floor(Math.random() * usuariosFiltrados.length)];
   const data = new Date().toLocaleString('pt-BR');
 
-  historico.push({ nome: sorteado.nome, data, avatar: sorteado.avatar });
+  historico.push({ nome: sorteado, data });
 
   res.json({ vencedor: sorteado });
 });
-
 
 // API para consultar histórico
 app.get('/historico', (req, res) => {
@@ -114,8 +143,6 @@ function extractVideoId(url) {
   return match ? match[1] : null;
 }
 
-
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
-
